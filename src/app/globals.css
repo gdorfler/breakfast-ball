@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  /* Fairway design system tokens — see fairway-design-system skill. Never hardcode these hexes in components. */
+  --paper: #f3eee3;
+  --paper-2: #eae3d4;
+  --ink: #17251c;
+  --fairway: #2c5f3a;
+  --fairway-lite: #6e9b72;
+  --flag: #c0562f;
+  --sand: #d8c8a6;
+  --line: #c9bfad;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-fairway: var(--fairway);
+  --color-fairway-lite: var(--fairway-lite);
+  --color-flag: var(--flag);
+  --color-sand: var(--sand);
+  --color-line: var(--line);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-inter);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-display), serif;
+  letter-spacing: -0.01em;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--fairway);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
