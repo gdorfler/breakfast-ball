@@ -44,6 +44,7 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [x] 6.3 Share flow (download image / copy link / native share sheet on mobile web) — Download button + native share sheet (`navigator.share` with the PNG file) where supported; "still chasing" line omitted (no want-to-play data in v0.5), "munis" stat not derivable (no ownership data) — card shows courses / states / rounds
 
 ## 7. Polish & mobile
+- [x] 7.0 Persistent primary nav (Search / Map / Profile) on every logged-in screen — bottom tab bar on mobile, top bar on desktop, same items and active-state logic both ways. Implemented via a `src/app/(app)` route group layout wrapping home/courses/profile so auth-gating (per-page redirect) and nav rendering can't get out of sync; logged-out routes (`/`, `/login`, `/onboarding`) sit outside the group and never see it
 - [ ] 7.1 Responsive pass on all screens (phone-first)
 - [ ] 7.2 Error and loading states across the app
 - [ ] 7.3 Basic SEO/meta tags + social preview image for the landing page

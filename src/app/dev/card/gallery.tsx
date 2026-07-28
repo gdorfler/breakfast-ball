@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 import { CourseMapSvg } from "@/components/course-map-svg";
 import type { CourseAggregate } from "@/lib/user-logs";
-import { ShareCard, CARD_SIZES, type CardVariant } from "@/app/profile/share/share-card";
+import { ShareCard, CARD_SIZES, type CardVariant } from "@/app/(app)/profile/share/share-card";
 
 const SPARSE: CourseAggregate[] = [
   { id: "s1", name: "Cobbs Creek Golf Club", city: "Philadelphia", state: "PA", latitude: 39.9634, longitude: -75.2724, avgRating: 4.5, playCount: 2, lastPlayed: "2026-06-20" },
