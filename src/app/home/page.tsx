@@ -61,12 +61,20 @@ export default async function HomePage() {
             </Link>
           </div>
         ) : (
-          <Link
-            href="/courses"
-            className="mt-4 block rounded-[10px] bg-fairway py-3 text-center font-display text-base text-paper"
-          >
-            Find a course
-          </Link>
+          <div className="mt-4 flex flex-col gap-3">
+            <Link
+              href="/courses"
+              className="block rounded-[10px] bg-fairway py-3 text-center font-display text-base text-paper"
+            >
+              Find a course
+            </Link>
+            <Link
+              href="/profile"
+              className="block rounded-[10px] border border-fairway py-3 text-center font-display text-base text-fairway transition-colors hover:bg-fairway hover:text-paper"
+            >
+              Your profile
+            </Link>
+          </div>
         )}
 
         <form action={signOut} className="mt-8 text-center">

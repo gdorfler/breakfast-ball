@@ -34,14 +34,14 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [x] 4.3 Edit/delete an existing log (affects only that single log entry, not other logs of the same course) — enforced via existing RLS (own-rows-only), reachable via "Edit" on the course page's history list
 
 ## 5. Profile & history
-- [ ] 5.1 Profile page listing all logs (most recent first) — a repeat play at the same course appears as its own entry, diary-style
-- [ ] 5.2 Basic stats: **distinct** courses played (not total logs), total rounds logged, average rating
-- [ ] 5.3 Empty state for a profile with no logs yet (per `fairway-design-system`)
+- [x] 5.1 Profile page listing all logs (most recent first) — a repeat play at the same course appears as its own entry, diary-style. Lives at `/profile`; each entry links to its course page
+- [x] 5.2 Basic stats: **distinct** courses played (not total logs), total rounds logged, average rating — stats row shows distinct courses / distinct states / total rounds, all derived from the same single query as the list so they can't drift. Average rating intentionally not shown (founder-specified stat row was courses/states/rounds; "munis" isn't derivable — no ownership-type data in schema or OSM seed)
+- [x] 5.3 Empty state for a profile with no logs yet (per `fairway-design-system`) — "Your map starts with one round" + Find-a-course CTA
 
 ## 6. Shareable course map
-- [ ] 6.1 Design and build the course map view (per `fairway-share-card`) — one dot per distinct course (lat/lng from `courses`), not one per log; repeat plays don't add extra dots. **Must filter `WHERE latitude IS NOT NULL`** — user-submitted courses save with NULL coordinates until backfilled and would otherwise be silently dropped or misplotted
-- [ ] 6.2 Export map as a shareable image
-- [ ] 6.3 Share flow (download image / copy link / native share sheet on mobile web)
+- [x] 6.1 Design and build the course map view (per `fairway-share-card`) — `/profile/map`: stylized paper US map (AlbersUSA, hand-rolled SVG from us-atlas — no map library/tiles), one dot per distinct course, staggered pin-drop entrance (reduced-motion respected), tap/hover a pin for name + rating. NULL-coordinate courses filtered before projection (never plotted at 0,0) with an honest "N courses aren't on the map yet" note
+- [x] 6.2 Export map as a shareable image — `/profile/share`: portrait (1080×1350, year-in-golf recipe with top-5 courses) + square (1080×1080, everyday-map recipe) variants, This-year/All-time scope toggle, exported via html-to-image at 2x (2160px) with Fraunces/Inter embedded; export renders a static non-animated instance so no frame is mid-animation. Verified end-to-end (PNG 2160×2700 produced) and at both sparse (5-course) and dense (120-course) data via the dev-only `/dev/card` test bench
+- [x] 6.3 Share flow (download image / copy link / native share sheet on mobile web) — Download button + native share sheet (`navigator.share` with the PNG file) where supported; "still chasing" line omitted (no want-to-play data in v0.5), "munis" stat not derivable (no ownership data) — card shows courses / states / rounds
 
 ## 7. Polish & mobile
 - [ ] 7.1 Responsive pass on all screens (phone-first)
