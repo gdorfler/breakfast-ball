@@ -81,8 +81,6 @@ export function AddCourseForm({ initialName }: { initialName: string }) {
         city: city.trim(),
         state,
         country: "US",
-        latitude: 0,
-        longitude: 0,
         num_holes: parseInt(numHoles),
         source: "user",
         created_by: user.id,

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
 type Params = Promise<{ id: string }>;
+type SearchParams = Promise<{ logged?: string }>;
 
 export async function generateMetadata({ params }: { params: Params }) {
   const { id } = await params;
@@ -18,8 +19,15 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
-export default async function CourseDetailPage({ params }: { params: Params }) {
+export default async function CourseDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: SearchParams;
+}) {
   const { id } = await params;
+  const { logged } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -45,6 +53,13 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
     .select("rating")
     .eq("course_id", id);
 
+  const { data: myLogs } = await supabase
+    .from("logs")
+    .select("id, rating, notes, played_on")
+    .eq("course_id", id)
+    .eq("user_id", user.id)
+    .order("played_on", { ascending: false });
+
   const totalLogs = logCount ?? 0;
   let avgRating: number | null = null;
   if (ratingData && ratingData.length >= 5) {
@@ -61,6 +76,12 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
         >
           <span aria-hidden="true">&larr;</span> Back to search
         </Link>
+
+        {logged && (
+          <div className="fade-in mb-6 rounded-[10px] border border-fairway/30 bg-fairway/10 px-4 py-3 text-center text-sm text-fairway">
+            Logged.
+          </div>
+        )}
 
         {course.source !== "seed" && course.source !== "osm" && (
           <span className="mb-2 inline-block rounded-full bg-sand/50 px-3 py-0.5 text-xs text-fairway-lite">
@@ -119,16 +140,59 @@ export default async function CourseDetailPage({ params }: { params: Params }) {
         </div>
 
         <div className="mt-6">
-          <button
-            disabled
-            className="w-full rounded-[10px] bg-fairway py-3 text-center font-display text-base text-paper opacity-60"
+          <Link
+            href={`/courses/${course.id}/log`}
+            className="block w-full rounded-[10px] bg-fairway py-3 text-center font-display text-base text-paper"
           >
             Log this course
-          </button>
-          <p className="mt-2 text-center text-xs text-fairway-lite/60">
-            Coming soon
-          </p>
+          </Link>
         </div>
+
+        {myLogs && myLogs.length > 0 && (
+          <div className="mt-8">
+            <h2 className="font-display text-lg text-ink">
+              You&rsquo;ve played this course {myLogs.length}{" "}
+              {myLogs.length === 1 ? "time" : "times"}
+            </h2>
+            <ul className="mt-3 divide-y divide-line/30">
+              {myLogs.map((log) => (
+                <li key={log.id} className="py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-fairway-lite">
+                          {new Date(log.played_on + "T00:00:00").toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric", year: "numeric" },
+                          )}
+                        </span>
+                        <span className="flex items-center gap-0.5 text-flag">
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const filled = Number(log.rating) - i;
+                            return (
+                              <span key={i} className={filled >= 1 ? "" : filled >= 0.5 ? "opacity-50" : "text-line"}>
+                                &#9733;
+                              </span>
+                            );
+                          })}
+                        </span>
+                      </div>
+                      {log.notes && (
+                        <p className="mt-1 truncate text-sm text-ink">{log.notes}</p>
+                      )}
+                    </div>
+                    <Link
+                      href={`/courses/${course.id}/log/${log.id}`}
+                      className="shrink-0 text-sm text-fairway-lite underline underline-offset-4 hover:text-ink"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {course.website && (
           <a

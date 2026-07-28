@@ -25,13 +25,13 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 ## 3. Course search & add
 - [x] 3.1 Course search page (search by name/city) — pg_trgm fuzzy search via `search_courses` RPC, debounced 300ms, ranks by trigram similarity + ILIKE fallback
 - [x] 3.2 Course detail page (name, location, aggregate rating if any logs exist) — rating hidden until 5+ logs, "Log this course" button stubbed for milestone 4
-- [x] 3.3 "Can't find your course?" flow — shown only after empty/weak search results; requires name + city + state; lat/lng set to 0,0 (won't appear on map until backfilled)
+- [x] 3.3 "Can't find your course?" flow — shown only after empty/weak search results; requires name + city + state; lat/lng left NULL (self-documenting "needs geocoding" state, won't appear on map until backfilled)
 - [x] 3.4 Basic duplicate-prevention on course add (fuzzy match by name/location) — `check_duplicate_courses` RPC with 0.35 similarity threshold + state filter, user must confirm "none of these" before insert
 
 ## 4. Logging a round
-- [ ] 4.1 "Log this course" form: rating, optional note, date played
-- [ ] 4.2 Save log, show confirmation. Repeat plays are additive: logging a course a user has already logged before creates a new log entry (like a diary entry), it does not block, warn, or overwrite. If the user has logged this course before, show a light "you've played this X times" hint on the form for context — not a blocker.
-- [ ] 4.3 Edit/delete an existing log (affects only that single log entry, not other logs of the same course)
+- [x] 4.1 "Log this course" form: rating, optional note, date played — half-star tap rating (0.5–5.0, required), 300-char note with live counter, date defaults to today. No score/GPS/performance fields.
+- [x] 4.2 Save log, show confirmation. Repeat plays are additive: logging a course a user has already logged before creates a new log entry (like a diary entry), it does not block, warn, or overwrite. Form shows "you've played this course X times before" hint when applicable; course page shows a dated history of the user's own past rounds at that course.
+- [x] 4.3 Edit/delete an existing log (affects only that single log entry, not other logs of the same course) — enforced via existing RLS (own-rows-only), reachable via "Edit" on the course page's history list
 
 ## 5. Profile & history
 - [ ] 5.1 Profile page listing all logs (most recent first) — a repeat play at the same course appears as its own entry, diary-style
@@ -39,7 +39,7 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [ ] 5.3 Empty state for a profile with no logs yet (per `fairway-design-system`)
 
 ## 6. Shareable course map
-- [ ] 6.1 Design and build the course map view (per `fairway-share-card`) — one dot per distinct course (lat/lng from `courses`), not one per log; repeat plays don't add extra dots
+- [ ] 6.1 Design and build the course map view (per `fairway-share-card`) — one dot per distinct course (lat/lng from `courses`), not one per log; repeat plays don't add extra dots. **Must filter `WHERE latitude IS NOT NULL`** — user-submitted courses save with NULL coordinates until backfilled and would otherwise be silently dropped or misplotted
 - [ ] 6.2 Export map as a shareable image
 - [ ] 6.3 Share flow (download image / copy link / native share sheet on mobile web)
 
