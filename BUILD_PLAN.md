@@ -6,15 +6,15 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [x] 0.1 Init Next.js (App Router) + TypeScript project named `breakfast-ball`
 - [x] 0.2 Install and configure Tailwind CSS
 - [x] 0.3 Create Supabase project; store keys in `.env.local`
-- [ ] 0.4 Connect repo to Vercel; confirm a blank page deploys
+- [x] 0.4 Connect repo to Vercel; confirm a blank page deploys — live at breakfast-ball.vercel.app, auth flow verified against production
 - [x] 0.5 Add base layout, fonts, and global styles per `fairway-design-system`
 
 ## 1. Data model
-- [ ] 1.1 `courses` table (name, city/state or region, lat, lng, seed source, created_at)
+- [x] 1.1 `courses` table (name, city/state or region, lat, lng, seed source, created_at) — also has country, num_holes, par, website, external_id, created_by
 - [x] 1.2 `profiles` table (linked to Supabase auth user, display name, avatar)
-- [ ] 1.3 `logs` table (user_id, course_id, rating, note, date_played, created_at) — **no uniqueness constraint on (user_id, course_id)**; a user may log the same course multiple times (repeat plays), each as its own row. See section 4 for behavior.
-- [ ] 1.4 Row-level security policies: users can only write their own logs/profile
-- [ ] 1.5 Seed `courses` with an initial batch of real courses, including lat/lng for each (enough to demo, not exhaustive)
+- [x] 1.3 `logs` table (user_id, course_id, rating, note, date_played, created_at) — **no uniqueness constraint on (user_id, course_id)**; a user may log the same course multiple times (repeat plays), each as its own row. See section 4 for behavior.
+- [x] 1.4 Row-level security policies: users can only write their own logs/profile — verified with a real two-user test: cross-user INSERT/UPDATE/DELETE all correctly blocked, courses publicly readable, own-logs-only enforced both ways
+- [x] 1.5 Seed `courses` with an initial batch of real courses, including lat/lng for each (enough to demo, not exhaustive) — 764 PA/NJ/DE courses from OpenStreetMap (source='osm'), upsert verified idempotent
 
 ## 2. Auth
 - [x] 2.1 Sign up / log in with Supabase Auth (email magic link) — verified: `signInWithOtp` succeeds against the live project
@@ -23,10 +23,10 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [x] 2.4 Basic profile creation on first sign-in (display name) — verified end-to-end
 
 ## 3. Course search & add
-- [ ] 3.1 Course search page (search by name/city)
-- [ ] 3.2 Course detail page (name, location, aggregate rating if any logs exist)
-- [ ] 3.3 "Can't find your course?" flow — let a user add a missing course
-- [ ] 3.4 Basic duplicate-prevention on course add (fuzzy match by name/location)
+- [x] 3.1 Course search page (search by name/city) — pg_trgm fuzzy search via `search_courses` RPC, debounced 300ms, ranks by trigram similarity + ILIKE fallback
+- [x] 3.2 Course detail page (name, location, aggregate rating if any logs exist) — rating hidden until 5+ logs, "Log this course" button stubbed for milestone 4
+- [x] 3.3 "Can't find your course?" flow — shown only after empty/weak search results; requires name + city + state; lat/lng set to 0,0 (won't appear on map until backfilled)
+- [x] 3.4 Basic duplicate-prevention on course add (fuzzy match by name/location) — `check_duplicate_courses` RPC with 0.35 similarity threshold + state filter, user must confirm "none of these" before insert
 
 ## 4. Logging a round
 - [ ] 4.1 "Log this course" form: rating, optional note, date played
@@ -53,6 +53,7 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [ ] 8.2 Smoke-test full flow end-to-end as a fresh user
 - [ ] 8.3 Recruit and onboard first 50–100 golfers
 - [ ] 8.4 Set up a lightweight way to collect feedback (form, email, DM)
+- [ ] 8.5 Configure custom SMTP for Supabase Auth (Authentication → Settings → SMTP Settings) — the default built-in email sender is rate-limited to a handful of emails/hour and won't hold up to real onboarding
 
 ---
 **Explicitly not planned here:** GPS, score analytics, handicap, tee-time booking, trips, native app. See CLAUDE.md if any of these come up.
