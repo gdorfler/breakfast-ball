@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ContourLines } from "@/components/contour-lines";
 import { fetchUserLogs } from "@/lib/user-logs";
+import { fetchWantToPlay } from "@/lib/want-to-play";
+import { WantToPlaySection } from "./want-to-play-section";
 import Link from "next/link";
 
 export const metadata = {
@@ -45,6 +47,9 @@ export default async function ProfilePage() {
   // Single source of truth: the same fetch the map and share card use, and
   // stats below derive from this same result set — no surface can drift.
   const logs = await fetchUserLogs(supabase, user.id);
+  // Fetched and rendered entirely separately from logs — want-to-play must
+  // never feed the played-courses stats below.
+  const wantToPlay = await fetchWantToPlay(supabase, user.id);
 
   const distinctCourses = new Set(
     logs.map((l) => l.course?.id).filter(Boolean),
@@ -161,6 +166,8 @@ export default async function ProfilePage() {
             )}
           </ul>
         )}
+
+        <WantToPlaySection initialItems={wantToPlay} />
 
         <div className="mt-10 text-center">
           <Link
