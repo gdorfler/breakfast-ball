@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ContourLines } from "@/components/contour-lines";
+import { CourseCard } from "@/components/course-card";
 import { fetchUserLogs } from "@/lib/user-logs";
 import { fetchWantToPlay } from "@/lib/want-to-play";
 import { WantToPlaySection } from "./want-to-play-section";
@@ -9,24 +10,6 @@ import Link from "next/link";
 export const metadata = {
   title: "Your profile — Breakfast Ball",
 };
-
-function Stars({ rating }: { rating: number }) {
-  return (
-    <span className="flex items-center gap-0.5 text-sm text-flag">
-      {Array.from({ length: 5 }, (_, i) => {
-        const filled = rating - i;
-        return (
-          <span
-            key={i}
-            className={filled >= 1 ? "" : filled >= 0.5 ? "opacity-50" : "text-line"}
-          >
-            &#9733;
-          </span>
-        );
-      })}
-    </span>
-  );
-}
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -131,36 +114,25 @@ export default async function ProfilePage() {
             </Link>
           </div>
         ) : (
-          <ul className="mt-2 divide-y divide-line/30">
+          <ul className="mt-2 space-y-2">
             {logs.map((log) =>
               log.course ? (
                 <li key={log.id}>
-                  <Link
-                    href={`/courses/${log.course.id}`}
-                    className="block py-4 transition-colors hover:bg-paper-2/50"
-                  >
-                    <div className="flex items-baseline justify-between gap-4">
-                      <span className="min-w-0 truncate font-display text-base text-ink">
-                        {log.course.name}
-                      </span>
-                      <span className="shrink-0 text-xs text-fairway-lite">
-                        {new Date(log.played_on + "T00:00:00").toLocaleDateString(
-                          "en-US",
-                          { month: "short", day: "numeric", year: "numeric" },
-                        )}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Stars rating={Number(log.rating)} />
-                      {(log.course.city || log.course.state) && (
-                        <span className="text-xs text-fairway-lite">
-                          {[log.course.city, log.course.state]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
+                  <CourseCard
+                    courseId={log.course.id}
+                    name={log.course.name}
+                    city={log.course.city}
+                    state={log.course.state}
+                    status="played"
+                    rating={Number(log.rating)}
+                    dateLabel={new Date(
+                      log.played_on + "T00:00:00",
+                    ).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  />
                 </li>
               ) : null,
             )}

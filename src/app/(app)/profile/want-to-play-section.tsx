@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { CourseCard } from "@/components/course-card";
 import type { WantToPlayRow } from "@/lib/want-to-play";
 
 export function WantToPlaySection({
@@ -46,29 +46,25 @@ export function WantToPlaySection({
       ) : (
         <ul className="mt-3 space-y-2">
           {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between gap-3 rounded-[10px] border border-line/30 bg-paper-2/60 px-4 py-3"
-            >
-              <Link href={`/courses/${item.courseId}`} className="min-w-0 flex-1">
-                <span className="block truncate font-display text-base text-ink">
-                  {item.name}
-                </span>
-                {(item.city || item.state) && (
-                  <span className="text-xs text-fairway-lite">
-                    {[item.city, item.state].filter(Boolean).join(", ")}
-                  </span>
-                )}
-              </Link>
-              <button
-                type="button"
-                onClick={() => handleRemove(item.id)}
-                disabled={removingId === item.id}
-                aria-label={`Remove ${item.name} from want to play`}
-                className="shrink-0 text-sm text-fairway-lite underline underline-offset-4 hover:text-flag disabled:opacity-50"
-              >
-                Remove
-              </button>
+            <li key={item.id}>
+              <CourseCard
+                courseId={item.courseId}
+                name={item.name}
+                city={item.city}
+                state={item.state}
+                status="wanted"
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(item.id)}
+                    disabled={removingId === item.id}
+                    aria-label={`Remove ${item.name} from want to play`}
+                    className="shrink-0 text-sm text-fairway-lite underline underline-offset-4 hover:text-flag disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                }
+              />
             </li>
           ))}
         </ul>

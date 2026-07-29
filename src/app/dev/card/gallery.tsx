@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
 import { CourseMapSvg, MapLegend } from "@/components/course-map-svg";
+import { CourseCard } from "@/components/course-card";
 import { buildMapPins, fitView } from "@/lib/map-view";
 import type { CourseAggregate } from "@/lib/user-logs";
 import type { WantToPlayRow } from "@/lib/want-to-play";
@@ -127,6 +128,32 @@ export function DevCardGallery() {
               className="w-full"
             />
           </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="font-display mb-3 text-xl">Course list cards (7.5)</h2>
+        <div className="max-w-lg space-y-2" data-testid="course-cards">
+          <CourseCard
+            courseId="s1"
+            name="Cobbs Creek Golf Club"
+            city="Philadelphia"
+            state="PA"
+            status="played"
+            rating={4.5}
+            dateLabel="Jul 4, 2026"
+          />
+          <CourseCard
+            courseId="s2"
+            name="A Course With An Extremely Long Name That Should Truncate Cleanly On Small Screens Golf Club"
+            city="Farmingdale"
+            state="NY"
+            status="played"
+            rating={5}
+            dateLabel="May 30, 2026"
+          />
+          <CourseCard courseId="wc1" name="Pine Valley Golf Club" city="Pine Valley" state="NJ" status="wanted" trailing={<button className="text-sm text-fairway-lite underline">Remove</button>} />
+          <CourseCard courseId="wc2" name="Sweetens Cove" city={null} state={null} status="wanted" trailing={<button className="text-sm text-fairway-lite underline">Remove</button>} />
         </div>
       </section>
 
