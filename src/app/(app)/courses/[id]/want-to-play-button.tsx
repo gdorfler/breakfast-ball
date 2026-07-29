@@ -58,20 +58,23 @@ export function WantToPlayButton({
 
   return (
     <div>
+      {/* A light intent marker, not a competing CTA — pill-shaped and quiet
+          (fairway-lite), unlike the solid full-width "Log this course" button. */}
       <button
         type="button"
         onClick={toggle}
         disabled={pending}
         aria-pressed={wanted}
-        className={`w-full rounded-[10px] border py-3 text-center font-display text-base transition-colors disabled:opacity-50 ${
+        className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm transition-colors disabled:opacity-50 ${
           wanted
-            ? "border-fairway bg-fairway/10 text-fairway"
-            : "border-fairway text-fairway hover:bg-fairway hover:text-paper"
+            ? "border-fairway-lite bg-fairway-lite/15 text-fairway"
+            : "border-line text-fairway-lite hover:border-fairway-lite hover:text-ink"
         }`}
       >
+        <span aria-hidden="true">{wanted ? "✓" : "+"}</span>
         {wanted ? "On your want-to-play list" : "Want to play"}
       </button>
-      {error && <p className="mt-2 text-center text-sm text-flag">{error}</p>}
+      {error && <p className="mt-2 text-sm text-flag">{error}</p>}
     </div>
   );
 }

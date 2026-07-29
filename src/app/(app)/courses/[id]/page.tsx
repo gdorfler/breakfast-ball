@@ -107,6 +107,13 @@ export default async function CourseDetailPage({
           {course.name}
         </h1>
 
+        <div className="mt-3">
+          <WantToPlayButton
+            courseId={course.id}
+            initialWanted={Boolean(wantToPlayRow)}
+          />
+        </div>
+
         <div className="mt-8 rounded-[10px] border border-line/40 bg-paper-2 p-6">
           {avgRating !== null ? (
             <div className="text-center">
@@ -147,17 +154,13 @@ export default async function CourseDetailPage({
           )}
         </div>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-6">
           <Link
             href={`/courses/${course.id}/log`}
             className="block w-full rounded-[10px] bg-fairway py-3 text-center font-display text-base text-paper"
           >
             Log this course
           </Link>
-          <WantToPlayButton
-            courseId={course.id}
-            initialWanted={Boolean(wantToPlayRow)}
-          />
         </div>
 
         {myLogs && myLogs.length > 0 && (
