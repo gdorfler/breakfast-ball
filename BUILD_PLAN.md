@@ -43,18 +43,25 @@ Numbered milestones, each sized for a short session. Check items off as they're 
 - [x] 6.2 Export map as a shareable image — `/profile/share`: portrait (1080×1350, year-in-golf recipe with top-5 courses) + square (1080×1080, everyday-map recipe) variants, This-year/All-time scope toggle, exported via html-to-image at 2x (2160px) with Fraunces/Inter embedded; export renders a static non-animated instance so no frame is mid-animation. Verified end-to-end (PNG 2160×2700 produced) and at both sparse (5-course) and dense (120-course) data via the dev-only `/dev/card` test bench
 - [x] 6.3 Share flow (download image / copy link / native share sheet on mobile web) — Download button + native share sheet (`navigator.share` with the PNG file) where supported; "still chasing" line omitted (no want-to-play data in v0.5), "munis" stat not derivable (no ownership data) — card shows courses / states / rounds
 
-## 7. Polish & mobile
-- [x] 7.0 Persistent primary nav (Search / Map / Profile) on every logged-in screen — bottom tab bar on mobile, top bar on desktop, same items and active-state logic both ways. Implemented via a `src/app/(app)` route group layout wrapping home/courses/profile so auth-gating (per-page redirect) and nav rendering can't get out of sync; logged-out routes (`/`, `/login`, `/onboarding`) sit outside the group and never see it
-- [ ] 7.1 Responsive pass on all screens (phone-first)
-- [ ] 7.2 Error and loading states across the app
-- [ ] 7.3 Basic SEO/meta tags + social preview image for the landing page
+## 7. Want-to-play / dream board
+- [x] 7.1 (a) `want_to_play` table (user_id, course_id, created_at) + add/remove "want to play" flow from course pages — RLS own-rows-only (single FOR ALL policy, mirrors the `logs` table pattern), `unique (user_id, course_id)` so a course can only be on the list once. Add/remove is a single toggle button on the course detail page (optimistic UI, unique-violation on rapid double-click treated as success rather than an error)
+- [ ] 7.2 (b) Surface the want-to-play list on the profile — a distinct section from logged courses, not merged into "courses played" stats
+- [ ] 7.3 (c) Dream-board map: played + want-to-play pins together, visually distinct pin states — **interactive/visual layer**
+- [ ] 7.4 (d) Regional zoom/clustering on the map, so dense areas don't become an unreadable pile of dots — **interactive/visual layer**
+- [ ] 7.5 (e) Visual course list (want-to-play + played, browsable) — **interactive/visual layer**
 
-## 8. Launch prep
-- [ ] 8.1 Deploy final build to production Vercel URL
-- [ ] 8.2 Smoke-test full flow end-to-end as a fresh user
-- [ ] 8.3 Recruit and onboard first 50–100 golfers
-- [ ] 8.4 Set up a lightweight way to collect feedback (form, email, DM)
-- [ ] 8.5 Configure custom SMTP for Supabase Auth (Authentication → Settings → SMTP Settings) — the default built-in email sender is rate-limited to a handful of emails/hour and won't hold up to real onboarding
+## 8. Polish & mobile
+- [x] 8.0 Persistent primary nav (Search / Map / Profile) on every logged-in screen — bottom tab bar on mobile, top bar on desktop, same items and active-state logic both ways. Implemented via a `src/app/(app)` route group layout wrapping home/courses/profile so auth-gating (per-page redirect) and nav rendering can't get out of sync; logged-out routes (`/`, `/login`, `/onboarding`) sit outside the group and never see it
+- [ ] 8.1 Responsive pass on all screens (phone-first)
+- [ ] 8.2 Error and loading states across the app
+- [ ] 8.3 Basic SEO/meta tags + social preview image for the landing page
+
+## 9. Launch prep
+- [ ] 9.1 Deploy final build to production Vercel URL
+- [ ] 9.2 Smoke-test full flow end-to-end as a fresh user
+- [ ] 9.3 Recruit and onboard first 50–100 golfers
+- [ ] 9.4 Set up a lightweight way to collect feedback (form, email, DM)
+- [ ] 9.5 Configure custom SMTP for Supabase Auth (Authentication → Settings → SMTP Settings) — the default built-in email sender is rate-limited to a handful of emails/hour and won't hold up to real onboarding
 
 ---
 **Explicitly not planned here:** GPS, score analytics, handicap, tee-time booking, trips, native app. See CLAUDE.md if any of these come up.

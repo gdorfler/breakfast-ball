@@ -20,7 +20,7 @@ Solo, non-engineer founder building this with Claude Code. Explain tradeoffs in 
 
 ## v0.5 Scope — Validation MVP
 
-Goal: get 50–100 real golfers to sign up, log courses they've played, rate them, and see a shareable map of everywhere they've golfed. Nothing more.
+Goal: get 50–100 real golfers to sign up, log courses they've played, rate them, see a shareable map of everywhere they've golfed, and mark courses they want to play. Scope is deliberately narrow — see the in-scope list and Scope changes section for the current boundary.
 
 In scope:
 1. Email or magic-link auth (Supabase Auth)
@@ -30,6 +30,7 @@ In scope:
 5. A shareable "course map" (visual, exportable/shareable image) showing everywhere the user has golfed
 6. Basic ability to add a missing course if it's not in the seed database
 7. Mobile-friendly responsive web (not a native app)
+8. Want-to-play list — a user can mark courses they want to play; these appear on their profile and on the course map as a distinct pin state (a "dream board").
 
 ## Explicitly OUT of scope for v0.5
 
@@ -44,6 +45,10 @@ Do not build these, even if they seem easy or "just a small addition." If a requ
 - Social feed, comments, following/followers (may come later, not now)
 - Course reviews beyond a simple rating + short note
 - Payments/monetization of any kind
+
+## Scope changes
+
+- 2026-07-29 — Added want-to-play/dream board to v0.5 scope. Rationale: testing the two-dimensional product (memory + desire), not a pure past-logger.
 
 ## Naming
 

@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { WantToPlayButton } from "./want-to-play-button";
 
 type Params = Promise<{ id: string }>;
 type SearchParams = Promise<{ logged?: string }>;
@@ -59,6 +60,13 @@ export default async function CourseDetailPage({
     .eq("course_id", id)
     .eq("user_id", user.id)
     .order("played_on", { ascending: false });
+
+  const { data: wantToPlayRow } = await supabase
+    .from("want_to_play")
+    .select("id")
+    .eq("course_id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   const totalLogs = logCount ?? 0;
   let avgRating: number | null = null;
@@ -139,13 +147,17 @@ export default async function CourseDetailPage({
           )}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-3">
           <Link
             href={`/courses/${course.id}/log`}
             className="block w-full rounded-[10px] bg-fairway py-3 text-center font-display text-base text-paper"
           >
             Log this course
           </Link>
+          <WantToPlayButton
+            courseId={course.id}
+            initialWanted={Boolean(wantToPlayRow)}
+          />
         </div>
 
         {myLogs && myLogs.length > 0 && (
