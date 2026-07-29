@@ -2,8 +2,10 @@
 
 import { useRef, useState } from "react";
 import { toBlob } from "html-to-image";
-import { CourseMapSvg } from "@/components/course-map-svg";
+import { CourseMapSvg, MapLegend } from "@/components/course-map-svg";
+import { buildMapPins, fitView } from "@/lib/map-view";
 import type { CourseAggregate } from "@/lib/user-logs";
+import type { WantToPlayRow } from "@/lib/want-to-play";
 import { ShareCard, CARD_SIZES, type CardVariant } from "@/app/(app)/profile/share/share-card";
 
 const SPARSE: CourseAggregate[] = [
@@ -13,6 +15,16 @@ const SPARSE: CourseAggregate[] = [
   { id: "s4", name: "Seaview Bay Course", city: "Galloway", state: "NJ", latitude: 39.4665, longitude: -74.5104, avgRating: 4.0, playCount: 1, lastPlayed: "2026-04-12" },
   { id: "s5", name: "Rock Manor Golf Course", city: "Wilmington", state: "DE", latitude: 39.7756, longitude: -75.5613, avgRating: 3.0, playCount: 1, lastPlayed: "2026-03-28" },
   { id: "s6", name: "Un-geocoded Muni", city: "Somewhere", state: "PA", latitude: null, longitude: null, avgRating: 4.0, playCount: 1, lastPlayed: "2026-06-01" },
+];
+
+const WANTED: WantToPlayRow[] = [
+  { id: "w1", courseId: "wc1", name: "Pine Valley Golf Club", city: "Pine Valley", state: "NJ", latitude: 39.7871, longitude: -74.9704 },
+  { id: "w2", courseId: "wc2", name: "Sweetens Cove", city: "South Pittsburg", state: "TN", latitude: 35.0509, longitude: -85.6317 },
+  { id: "w3", courseId: "wc3", name: "Bandon Dunes", city: "Bandon", state: "OR", latitude: 43.1907, longitude: -124.3936 },
+  // Same course as played s1 — "played wins", must NOT render a second pin.
+  { id: "w4", courseId: "s1", name: "Cobbs Creek Golf Club", city: "Philadelphia", state: "PA", latitude: 39.9634, longitude: -75.2724 },
+  // Un-geocoded — must be excluded, never at (0,0).
+  { id: "w5", courseId: "wc5", name: "Mystery Nine", city: "Nowhere", state: "PA", latitude: null, longitude: null },
 ];
 
 // 120 deterministic dots scattered across the continental US (golden-angle
@@ -34,6 +46,9 @@ const DENSE: CourseAggregate[] = Array.from({ length: 120 }, (_, i) => {
     lastPlayed: "2026-06-15",
   };
 });
+
+const sparsePins = buildMapPins(SPARSE, WANTED).pins;
+const densePins = buildMapPins(DENSE, WANTED).pins;
 
 function Scaled({
   variant,
@@ -88,14 +103,30 @@ export function DevCardGallery() {
         </p>
         <div aria-hidden="true" style={{ position: "fixed", top: 0, left: -2300 }}>
           <div ref={exportRef}>
-            <ShareCard variant="portrait" eyebrow="2026 · Year in golf" headline="Gavin’s 2026, mapped" courses={SPARSE} totalRounds={9} />
+            <ShareCard variant="portrait" eyebrow="2026 · Year in golf" headline="Gavin’s 2026, mapped" courses={SPARSE} wantToPlay={WANTED} totalRounds={9} />
           </div>
         </div>
       </section>
+
       <section>
-        <h2 className="font-display mb-3 text-xl">Interactive map (animated, sparse)</h2>
-        <div className="max-w-xl">
-          <CourseMapSvg courses={SPARSE} animated className="w-full" />
+        <h2 className="font-display mb-3 text-xl">
+          Dream-board map: full US (animated) and auto-fit view
+        </h2>
+        <div className="flex flex-wrap gap-8">
+          <div className="w-full max-w-xl" data-testid="map-full">
+            <CourseMapSvg pins={sparsePins} animated className="w-full" />
+            <MapLegend className="mt-2 text-xs text-fairway-lite" />
+          </div>
+          <div className="w-full max-w-xl" data-testid="map-fitted">
+            <p className="mb-1 text-sm text-fairway-lite">
+              auto-fit to a regional (PA/NJ/DE-only) pin set — the realistic case
+            </p>
+            <CourseMapSvg
+              pins={sparsePins.filter((p) => p.state !== "OR" && p.state !== "TN" && p.state !== "NY")}
+              view={fitView(sparsePins.filter((p) => p.state !== "OR" && p.state !== "TN" && p.state !== "NY"))}
+              className="w-full"
+            />
+          </div>
         </div>
       </section>
 
@@ -103,27 +134,27 @@ export function DevCardGallery() {
         <h2 className="font-display mb-3 text-xl">Cards</h2>
         <div className="flex flex-wrap items-start gap-8">
           <div>
-            <p className="mb-2 text-sm text-fairway-lite">Portrait · sparse (5 mapped + 1 unmapped)</p>
+            <p className="mb-2 text-sm text-fairway-lite">Portrait · sparse + want-to-play</p>
             <Scaled variant="portrait">
-              <ShareCard variant="portrait" eyebrow="2026 · Year in golf" headline="Gavin’s 2026, mapped" courses={SPARSE} totalRounds={9} />
+              <ShareCard variant="portrait" eyebrow="2026 · Year in golf" headline="Gavin’s 2026, mapped" courses={SPARSE} wantToPlay={WANTED} totalRounds={9} />
             </Scaled>
           </div>
           <div>
-            <p className="mb-2 text-sm text-fairway-lite">Portrait · dense (120)</p>
+            <p className="mb-2 text-sm text-fairway-lite">Portrait · dense (120) + want-to-play</p>
             <Scaled variant="portrait">
-              <ShareCard variant="portrait" eyebrow="Course map · All time" headline="Gavin’s courses, mapped" courses={DENSE} totalRounds={214} />
+              <ShareCard variant="portrait" eyebrow="Course map · All time" headline="Gavin’s courses, mapped" courses={DENSE} wantToPlay={WANTED} totalRounds={214} />
             </Scaled>
           </div>
           <div>
-            <p className="mb-2 text-sm text-fairway-lite">Square · sparse</p>
+            <p className="mb-2 text-sm text-fairway-lite">Square · sparse (no chasing line on square)</p>
             <Scaled variant="square">
-              <ShareCard variant="square" eyebrow="Course map" headline="Gavin’s courses, mapped" courses={SPARSE} totalRounds={9} />
+              <ShareCard variant="square" eyebrow="Course map" headline="Gavin’s courses, mapped" courses={SPARSE} wantToPlay={WANTED} totalRounds={9} />
             </Scaled>
           </div>
           <div>
-            <p className="mb-2 text-sm text-fairway-lite">Square · dense</p>
+            <p className="mb-2 text-sm text-fairway-lite">Square · dense · empty want-to-play</p>
             <Scaled variant="square">
-              <ShareCard variant="square" eyebrow="Course map" headline="Gavin’s courses, mapped" courses={DENSE} totalRounds={214} />
+              <ShareCard variant="square" eyebrow="Course map" headline="Gavin’s courses, mapped" courses={DENSE} wantToPlay={[]} totalRounds={214} />
             </Scaled>
           </div>
         </div>

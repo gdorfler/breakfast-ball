@@ -1,9 +1,8 @@
-import { CourseMapSvg } from "@/components/course-map-svg";
+import { CourseMapSvg, MapLegend } from "@/components/course-map-svg";
 import { ContourLines } from "@/components/contour-lines";
-import {
-  distinctStates,
-  type CourseAggregate,
-} from "@/lib/user-logs";
+import { distinctStates, type CourseAggregate } from "@/lib/user-logs";
+import type { WantToPlayRow } from "@/lib/want-to-play";
+import { buildMapPins } from "@/lib/map-view";
 
 export type CardVariant = "portrait" | "square";
 
@@ -44,20 +43,25 @@ type ShareCardProps = {
   eyebrow: string;
   headline: string;
   courses: CourseAggregate[];
+  wantToPlay: WantToPlayRow[];
   totalRounds: number;
 };
 
 /**
  * The exportable card — always rendered at true pixel size (1080-wide) and
  * never animated, so the PNG capture is deterministic. Public data only:
- * display name, course names, stats. Sizing is inline px on purpose; this is a
- * fixed-format print object, not a responsive screen.
+ * display name, course names, stats. The map keeps the full-US view (the
+ * recognizable object at thumbnail size) and runs the same pure cluster math
+ * as the interactive map, so dense metros read as count bubbles, not a pile.
+ * Stats count PLAYED courses only; want-to-play appears as hollow pins and
+ * the "still chasing" hook line, never in the numbers.
  */
 export function ShareCard({
   variant,
   eyebrow,
   headline,
   courses,
+  wantToPlay,
   totalRounds,
 }: ShareCardProps) {
   const { width, height } = CARD_SIZES[variant];
@@ -65,12 +69,24 @@ export function ShareCard({
   const topCourses = [...courses]
     .sort((a, b) => b.avgRating - a.avgRating)
     .slice(0, 5);
+  const { pins } = buildMapPins(courses, wantToPlay);
+  // The conversation hook (share-card skill): the two most recently added
+  // want-to-play courses. Omitted gracefully when the list is empty.
+  const chasing = wantToPlay.slice(0, 2).map((w) => w.name);
 
   const stats: Array<[number, string]> = [
     [courses.length, courses.length === 1 ? "course" : "courses"],
     [states, states === 1 ? "state" : "states"],
     [totalRounds, totalRounds === 1 ? "round" : "rounds"],
   ];
+
+  const legend = (
+    <MapLegend
+      className="justify-center font-body"
+      dotSize={14}
+      // Inline size for the fixed-format card, not a responsive screen.
+    />
+  );
 
   return (
     <div
@@ -103,19 +119,23 @@ export function ShareCard({
             {headline}
           </h1>
 
-          <CourseMapSvg
-            courses={courses}
-            className="w-full"
-            // 936 x 585 — the hero, largest element on the card
-          />
+          <div style={{ width: 860, alignSelf: "center", marginTop: 14 }}>
+            <CourseMapSvg pins={pins} className="w-full" />
+          </div>
+
+          <div
+            style={{ marginTop: 8, fontSize: 21, color: "var(--fairway-lite)" }}
+          >
+            {legend}
+          </div>
 
           <div
             className="flex items-start justify-center text-center"
-            style={{ marginTop: 34, gap: 96 }}
+            style={{ marginTop: 24, gap: 96 }}
           >
             {stats.map(([value, label]) => (
               <div key={label}>
-                <div className="font-display" style={{ fontSize: 76, lineHeight: 1 }}>
+                <div className="font-display" style={{ fontSize: 74, lineHeight: 1 }}>
                   {value}
                 </div>
                 <div
@@ -129,19 +149,19 @@ export function ShareCard({
           </div>
 
           {topCourses.length > 0 && (
-            <div style={{ marginTop: 38 }}>
+            <div style={{ marginTop: 26 }}>
               <div
                 className="font-body uppercase"
                 style={{ fontSize: 21, letterSpacing: 3, color: "var(--fairway-lite)" }}
               >
                 Top courses
               </div>
-              <div style={{ marginTop: 10 }}>
+              <div style={{ marginTop: 8 }}>
                 {topCourses.map((course, i) => (
                   <div
                     key={course.id}
                     className="flex items-center"
-                    style={{ height: 44, gap: 18 }}
+                    style={{ height: 42, gap: 18 }}
                   >
                     <span
                       className="font-display"
@@ -151,22 +171,37 @@ export function ShareCard({
                     </span>
                     <span
                       className="font-display truncate"
-                      style={{ fontSize: 29, flex: 1, minWidth: 0 }}
+                      style={{ fontSize: 28, flex: 1, minWidth: 0 }}
                     >
                       {course.name}
                     </span>
-                    <CardStars rating={course.avgRating} size={26} />
+                    <CardStars rating={course.avgRating} size={25} />
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div
-            className="font-display flex items-end justify-end"
-            style={{ flex: 1, fontSize: 26, color: "var(--fairway)" }}
-          >
-            Breakfast Ball
+          <div className="flex items-end justify-between" style={{ flex: 1, gap: 24 }}>
+            {chasing.length > 0 ? (
+              <div
+                className="font-body truncate"
+                style={{ fontSize: 24, color: "var(--fairway-lite)", minWidth: 0 }}
+              >
+                still chasing:{" "}
+                <span className="font-display" style={{ color: "var(--ink)" }}>
+                  {chasing.join(" · ")}
+                </span>
+              </div>
+            ) : (
+              <div />
+            )}
+            <div
+              className="font-display"
+              style={{ fontSize: 26, color: "var(--fairway)", whiteSpace: "nowrap" }}
+            >
+              Breakfast Ball
+            </div>
           </div>
         </div>
       ) : (
@@ -186,8 +221,13 @@ export function ShareCard({
             </h1>
           </div>
 
-          <div className="flex flex-1 items-center">
-            <CourseMapSvg courses={courses} className="w-full" />
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <CourseMapSvg pins={pins} className="w-full" />
+            <div
+              style={{ marginTop: 6, fontSize: 20, color: "var(--fairway-lite)" }}
+            >
+              {legend}
+            </div>
           </div>
 
           <div className="flex items-end justify-between">

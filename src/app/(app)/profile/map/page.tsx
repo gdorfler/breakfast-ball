@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchUserLogs, aggregateCourses } from "@/lib/user-logs";
+import { fetchWantToPlay } from "@/lib/want-to-play";
+import { buildMapPins } from "@/lib/map-view";
 import { MapView } from "./map-view";
 import Link from "next/link";
 
@@ -24,8 +26,11 @@ export default async function CourseMapPage() {
 
   const logs = await fetchUserLogs(supabase, user.id);
   const courses = aggregateCourses(logs);
+  const wantToPlay = await fetchWantToPlay(supabase, user.id);
 
-  if (courses.length === 0) {
+  // A want-to-play-only map is a valid dream board — only show the empty
+  // state when there's truly nothing to draw.
+  if (courses.length === 0 && wantToPlay.length === 0) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
         <div className="w-full max-w-lg rounded-[10px] border border-line/40 bg-paper-2 p-8 text-center">
@@ -33,7 +38,8 @@ export default async function CourseMapPage() {
             Your map starts with one round
           </p>
           <p className="mt-2 text-sm text-fairway-lite">
-            Log a course you&rsquo;ve played and watch it appear.
+            Log a course you&rsquo;ve played &mdash; or mark one you&rsquo;re
+            chasing &mdash; and watch it appear.
           </p>
           <Link
             href="/courses"
@@ -46,5 +52,9 @@ export default async function CourseMapPage() {
     );
   }
 
-  return <MapView courses={courses} totalRounds={logs.length} />;
+  const { pins, unmappedCount } = buildMapPins(courses, wantToPlay);
+
+  return (
+    <MapView pins={pins} unmappedCount={unmappedCount} totalRounds={logs.length} />
+  );
 }

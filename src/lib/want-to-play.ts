@@ -10,6 +10,8 @@ export type WantToPlayRow = {
   name: string;
   city: string | null;
   state: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export async function fetchWantToPlay(
@@ -18,13 +20,20 @@ export async function fetchWantToPlay(
 ): Promise<WantToPlayRow[]> {
   const { data } = await supabase
     .from("want_to_play")
-    .select("id, course:courses(id, name, city, state)")
+    .select("id, course:courses(id, name, city, state, latitude, longitude)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   const rows = (data ?? []) as unknown as Array<{
     id: string;
-    course: { id: string; name: string; city: string | null; state: string | null } | null;
+    course: {
+      id: string;
+      name: string;
+      city: string | null;
+      state: string | null;
+      latitude: number | null;
+      longitude: number | null;
+    } | null;
   }>;
 
   return rows
@@ -35,5 +44,7 @@ export async function fetchWantToPlay(
       name: row.course!.name,
       city: row.course!.city,
       state: row.course!.state,
+      latitude: row.course!.latitude,
+      longitude: row.course!.longitude,
     }));
 }

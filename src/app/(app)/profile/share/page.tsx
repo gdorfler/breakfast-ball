@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchUserLogs } from "@/lib/user-logs";
+import { fetchWantToPlay } from "@/lib/want-to-play";
 import { ShareStudio } from "./share-studio";
 
 export const metadata = {
@@ -45,5 +46,13 @@ export default async function SharePage() {
     );
   }
 
-  return <ShareStudio displayName={profile.display_name} logs={logs} />;
+  const wantToPlay = await fetchWantToPlay(supabase, user.id);
+
+  return (
+    <ShareStudio
+      displayName={profile.display_name}
+      logs={logs}
+      wantToPlay={wantToPlay}
+    />
+  );
 }

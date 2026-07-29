@@ -3,54 +3,60 @@ import {
   US_NATION_PATH,
   US_STATES_MESH_PATH,
 } from "@/lib/us-map-data";
-import { projectPoint } from "@/lib/map-projection";
-
-export type MapCourse = {
-  id: string;
-  name: string;
-  latitude: number | null;
-  longitude: number | null;
-  avgRating: number;
-};
+import {
+  FULL_VIEW,
+  clusterPins,
+  viewBoxOf,
+  type MapCluster,
+  type MapPin,
+  type MapViewState,
+} from "@/lib/map-view";
 
 type CourseMapSvgProps = {
-  courses: MapCourse[];
+  pins: MapPin[];
+  /** Current view; defaults to the full-US view (what the share card uses). */
+  view?: MapViewState;
   /** Staggered pin-drop entrance. Off for exports so no frame is ever mid-animation. */
   animated?: boolean;
   activeId?: string | null;
-  onSelectCourse?: (course: MapCourse) => void;
+  onSelectPin?: (pin: MapPin) => void;
+  onSelectCluster?: (cluster: MapCluster) => void;
   className?: string;
 };
 
 /**
- * The stylized paper US map — shared by the in-app interactive view and the
- * static share-card export. Courses that can't be projected (NULL or bad
- * coordinates) are filtered out here; they never plot at (0,0).
+ * The stylized paper US map, now a two-state "dream board": solid fairway
+ * pins for played courses (earned), hollow outlined pins for want-to-play
+ * (a promise). Overlapping pins merge into count bubbles per the same
+ * metaphor: solid = all played, hollow = all want-to-play, solid with an
+ * outer ring = mixed. No flag-red anywhere on the map — it stays in reserve.
+ *
+ * Pin/bubble sizes divide by view.scale and strokes use
+ * vector-effect: non-scaling-stroke, so zooming magnifies the terrain while
+ * marks and lines keep constant screen size.
  */
 export function CourseMapSvg({
-  courses,
+  pins,
+  view = FULL_VIEW,
   animated = false,
   activeId = null,
-  onSelectCourse,
+  onSelectPin,
+  onSelectCluster,
   className = "",
 }: CourseMapSvgProps) {
-  const plotted = courses
-    .map((course) => {
-      const point = projectPoint(course.latitude, course.longitude);
-      return point ? { course, x: point[0], y: point[1] } : null;
-    })
-    .filter((p): p is NonNullable<typeof p> => p !== null);
+  const k = view.scale;
+  const clusters = clusterPins(pins, k);
+  const interactive = Boolean(onSelectPin || onSelectCluster);
 
-  // Dots shrink a touch as density grows so a 100-course map stays readable.
-  const dotRadius = plotted.length > 60 ? 5 : plotted.length > 25 ? 6.5 : 9;
-  const interactive = Boolean(onSelectCourse);
+  const playedCount = pins.filter((p) => p.status === "played").length;
+  const wantedCount = pins.length - playedCount;
 
   return (
     <svg
-      viewBox={`0 0 ${US_MAP_VIEWBOX.width} ${US_MAP_VIEWBOX.height}`}
+      viewBox={viewBoxOf(view)}
       className={className}
       role="img"
-      aria-label={`US map with ${plotted.length} logged ${plotted.length === 1 ? "course" : "courses"}`}
+      aria-label={`US map: ${playedCount} played, ${wantedCount} want-to-play`}
     >
       <path
         d={US_NATION_PATH}
@@ -58,6 +64,7 @@ export function CourseMapSvg({
         stroke="var(--ink)"
         strokeOpacity="0.45"
         strokeWidth="1"
+        vectorEffect="non-scaling-stroke"
       />
       <path
         d={US_STATES_MESH_PATH}
@@ -65,41 +72,141 @@ export function CourseMapSvg({
         stroke="var(--line)"
         strokeOpacity="0.6"
         strokeWidth="0.75"
+        vectorEffect="non-scaling-stroke"
       />
-      {plotted.map(({ course, x, y }, i) => {
-        const standout = course.avgRating >= 4.5;
-        const isActive = activeId === course.id;
+
+      {clusters.map((cluster, i) => {
+        const delayStyle = animated
+          ? { animationDelay: `${Math.min(i * 30, 1200)}ms` }
+          : undefined;
+        const animClass = animated ? "pin-drop" : "";
+
+        if (cluster.pins.length === 1) {
+          const pin = cluster.pins[0];
+          const played = pin.status === "played";
+          const isActive = activeId === pin.id;
+          const r = (isActive ? 11 : 8) / k;
+          return (
+            <circle
+              key={pin.id}
+              cx={pin.x}
+              cy={pin.y}
+              r={r}
+              fill={played ? "var(--fairway)" : "var(--paper)"}
+              stroke={played ? "var(--paper)" : "var(--fairway)"}
+              strokeWidth={played ? 1.5 / k : 2 / k}
+              className={[animClass, interactive ? "cursor-pointer" : ""]
+                .filter(Boolean)
+                .join(" ")}
+              style={delayStyle}
+              {...(onSelectPin
+                ? {
+                    tabIndex: 0,
+                    role: "button",
+                    "aria-label": played
+                      ? `${pin.name}, rated ${pin.rating?.toFixed(1)}`
+                      : `${pin.name}, on your want-to-play list`,
+                    onClick: () => onSelectPin(pin),
+                    onMouseEnter: () => onSelectPin(pin),
+                    onFocus: () => onSelectPin(pin),
+                  }
+                : {})}
+            />
+          );
+        }
+
+        const hasPlayed = cluster.pins.some((p) => p.status === "played");
+        const hasWanted = cluster.pins.some((p) => p.status === "wanted");
+        const mixed = hasPlayed && hasWanted;
+        const r = 14 / k;
+
         return (
-          <circle
-            key={course.id}
-            cx={x}
-            cy={y}
-            r={isActive ? dotRadius * 1.4 : dotRadius}
-            fill={standout ? "var(--flag)" : "var(--fairway)"}
-            stroke="var(--paper)"
-            strokeWidth="1.5"
-            className={[
-              animated ? "pin-drop" : "",
-              interactive ? "cursor-pointer" : "",
-            ]
+          <g
+            key={cluster.key}
+            className={[animClass, interactive ? "cursor-pointer" : ""]
               .filter(Boolean)
               .join(" ")}
-            style={
-              animated ? { animationDelay: `${Math.min(i * 30, 1200)}ms` } : undefined
-            }
-            {...(interactive
+            style={delayStyle}
+            {...(onSelectCluster
               ? {
                   tabIndex: 0,
                   role: "button",
-                  "aria-label": `${course.name}, rated ${course.avgRating.toFixed(1)}`,
-                  onClick: () => onSelectCourse?.(course),
-                  onMouseEnter: () => onSelectCourse?.(course),
-                  onFocus: () => onSelectCourse?.(course),
+                  "aria-label": `${cluster.pins.length} courses here — zoom in`,
+                  onClick: () => onSelectCluster(cluster),
                 }
               : {})}
-          />
+          >
+            {mixed && (
+              <circle
+                cx={cluster.x}
+                cy={cluster.y}
+                r={r + 3.5 / k}
+                fill="none"
+                stroke="var(--fairway)"
+                strokeWidth={1.5 / k}
+              />
+            )}
+            <circle
+              cx={cluster.x}
+              cy={cluster.y}
+              r={r}
+              fill={hasPlayed ? "var(--fairway)" : "var(--paper)"}
+              stroke={hasPlayed ? "var(--paper)" : "var(--fairway)"}
+              strokeWidth={hasPlayed ? 1.5 / k : 2 / k}
+            />
+            <text
+              x={cluster.x}
+              y={cluster.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill={hasPlayed ? "var(--paper)" : "var(--fairway)"}
+              fontSize={13 / k}
+              className="select-none font-body"
+            >
+              {cluster.pins.length}
+            </text>
+          </g>
         );
       })}
     </svg>
+  );
+}
+
+/** The filled-vs-hollow legend, shared by the in-app map and the share card. */
+export function MapLegend({
+  className = "",
+  dotSize = 10,
+}: {
+  className?: string;
+  dotSize?: number;
+}) {
+  return (
+    <div className={`flex items-center gap-5 ${className}`}>
+      <span className="flex items-center gap-1.5">
+        <span
+          aria-hidden="true"
+          className="inline-block rounded-full"
+          style={{
+            width: dotSize,
+            height: dotSize,
+            background: "var(--fairway)",
+          }}
+        />
+        Played
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span
+          aria-hidden="true"
+          className="inline-block rounded-full"
+          style={{
+            width: dotSize,
+            height: dotSize,
+            background: "var(--paper)",
+            border: "1.5px solid var(--fairway)",
+          }}
+        />
+        Want to play
+      </span>
+    </div>
   );
 }

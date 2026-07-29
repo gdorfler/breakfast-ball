@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { toBlob } from "html-to-image";
 import { aggregateCourses, type UserLog } from "@/lib/user-logs";
+import type { WantToPlayRow } from "@/lib/want-to-play";
 import { ShareCard, CARD_SIZES, type CardVariant } from "./share-card";
 
 type Scope = "all" | "year";
@@ -11,9 +12,11 @@ type Scope = "all" | "year";
 export function ShareStudio({
   displayName,
   logs,
+  wantToPlay,
 }: {
   displayName: string;
   logs: UserLog[];
+  wantToPlay: WantToPlayRow[];
 }) {
   const [variant, setVariant] = useState<CardVariant>("portrait");
   const [scope, setScope] = useState<Scope>("all");
@@ -197,6 +200,7 @@ export function ShareStudio({
                     eyebrow={eyebrow}
                     headline={headline}
                     courses={courses}
+                    wantToPlay={wantToPlay}
                     totalRounds={scopedLogs.length}
                   />
                 </div>
@@ -235,6 +239,7 @@ export function ShareStudio({
                   eyebrow={eyebrow}
                   headline={headline}
                   courses={courses}
+                  wantToPlay={wantToPlay}
                   totalRounds={scopedLogs.length}
                 />
               </div>
